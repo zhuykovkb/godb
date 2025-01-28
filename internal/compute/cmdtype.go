@@ -1,4 +1,4 @@
-package model
+package compute
 
 type CmdType string
 
