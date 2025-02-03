@@ -31,29 +31,26 @@ func (d *Db) HandleReq(in string) (string, error) {
 
 	cmd, err := d.compute.Parse(in)
 	if err != nil {
-		logger.Warn(err.Error())
 		return "", err
 	}
 
 	switch cmd.Type {
 	case compute.CmdTypeSet:
 		logger.Info("Setting key-value store")
-		d.storage.Set(cmd.Key, cmd.Value)
+		d.storage.Set(cmd.Args[0], cmd.Args[1])
 		return "", nil
 	case compute.CmdTypeGet:
 		logger.Info("Getting key-value store")
-		r, ok := d.storage.Get(cmd.Key)
+		r, ok := d.storage.Get(cmd.Args[0])
 		if !ok {
-			logger.Warn("key not found")
 			return "", errors.New("key not found")
 		}
 		return r, nil
 	case compute.CmdTypeDel:
 		logger.Info("Deleting key-value store")
-		d.storage.Del(cmd.Key)
+		d.storage.Del(cmd.Args[0])
 		return "", nil
 	default:
-		logger.Info("Unknown command")
 	}
-	return "", errors.New("unknown command")
+	return "", errors.New("unknown command %s")
 }

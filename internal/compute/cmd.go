@@ -1,7 +1,6 @@
 package compute
 
 type Cmd struct {
-	Type  CmdType
-	Key   string
-	Value string
+	Type CmdType
+	Args []string
 }

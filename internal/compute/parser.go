@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+const SetCmdArgCount = 2
+const GetDelCmdArgCount = 1
+
 func NewParser() *Parser {
 	return &Parser{}
 }
@@ -18,44 +21,58 @@ type ParserInterface interface {
 type Parser struct{}
 
 func (p *Parser) Parse(cmd string) (*Cmd, error) {
-	parts := strings.Fields(cmd)
-	if len(parts) == 0 {
-		return nil, formatError("parse: undefined command")
+	command, err := getCommand(cmd)
+	if err != nil {
+		return nil, err
 	}
 
-	ctype := CmdType(parts[0])
-	switch ctype {
+	err = validateArgs(command)
+	if err != nil {
+		return nil, err
+	}
+
+	return command, nil
+}
+
+func validateArgs(command *Cmd) error {
+	switch command.Type {
 	case CmdTypeSet:
-		if len(parts) != 3 {
-			return nil, formatError("parse: invalid %s command", string(ctype))
+		if len(command.Args) != SetCmdArgCount {
+			return formatError("invalid arg count: %d need: %d", len(command.Args), SetCmdArgCount)
 		}
 
-		if err := validateArgument(parts[1:]...); err != nil {
-			return nil, err
+		if err := validateArgument(command.Args...); err != nil {
+			return err
 		}
-
-		return &Cmd{
-			Type:  ctype,
-			Key:   parts[1],
-			Value: parts[2],
-		}, nil
 	case CmdTypeGet, CmdTypeDel:
-		if len(parts) != 2 {
-			return nil, formatError("parse: invalid %s command", string(ctype))
+		if len(command.Args) != GetDelCmdArgCount {
+			return formatError("invalid arg count: %d need: %d", len(command.Args), GetDelCmdArgCount)
 		}
 
-		if err := validateArgument(parts[1]); err != nil {
-			return nil, err
+		if err := validateArgument(command.Args...); err != nil {
+			return err
 		}
-
-		return &Cmd{
-			Type: ctype,
-			Key:  parts[1],
-		}, nil
 
 	default:
-		return nil, formatError("parse: invalid %s command", string(ctype))
+		return formatError("parse: invalid %s command", string(command.Type))
 	}
+	return nil
+}
+
+func getCommand(cmd string) (*Cmd, error) {
+	if cmd == "" {
+		return nil, formatError("empty command")
+	}
+
+	parts := strings.Fields(cmd)
+	if len(parts) == 0 {
+		return nil, formatError("parse: undefined command %s", cmd)
+	}
+
+	return &Cmd{
+		Type: CmdType(parts[0]),
+		Args: parts[1:],
+	}, nil
 }
 
 var validArgPattern = regexp.MustCompile(`^\w+$`)

@@ -26,14 +26,14 @@ func main() {
 		fmt.Print("-> ")
 		in, err := r.ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
+			logger.Warn(err.Error())
 			continue
 		}
 
 		res, err := database.HandleReq(in)
 
 		if err != nil {
-			fmt.Println(err)
+			logger.Warn(err.Error())
 			continue
 		}
 
