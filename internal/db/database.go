@@ -14,7 +14,7 @@ type Db struct {
 	compute compute.ParserInterface
 }
 
-func StartDB(s storage.Storage, c compute.ParserInterface) *Db {
+func GetDb(s storage.Storage, c compute.ParserInterface) *Db {
 	return &Db{
 		storage: s,
 		compute: c,
@@ -38,7 +38,7 @@ func (d *Db) HandleReq(in string) (string, error) {
 	case compute.CmdTypeSet:
 		logger.Info("Setting key-value store")
 		d.storage.Set(cmd.Args[0], cmd.Args[1])
-		return "", nil
+		return "success", nil
 	case compute.CmdTypeGet:
 		logger.Info("Getting key-value store")
 		r, ok := d.storage.Get(cmd.Args[0])
@@ -49,8 +49,9 @@ func (d *Db) HandleReq(in string) (string, error) {
 	case compute.CmdTypeDel:
 		logger.Info("Deleting key-value store")
 		d.storage.Del(cmd.Args[0])
-		return "", nil
+		return "success", nil
 	default:
 	}
+
 	return "", errors.New("unknown command %s")
 }
