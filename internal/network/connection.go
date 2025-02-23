@@ -29,10 +29,6 @@ func (c *Connection) Close() {
 	_ = c.c.Close()
 }
 
-func (c *Connection) Receive(b []byte) (n int, err error) {
-	return 0, nil
-}
-
 func (c *Connection) Send(b []byte) ([]byte, error) {
 	_, err := c.c.Write(b)
 	if err != nil {
