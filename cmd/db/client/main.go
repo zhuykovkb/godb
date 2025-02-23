@@ -26,6 +26,7 @@ func main() {
 
 	r := bufio.NewReader(os.Stdin)
 	for {
+		fmt.Println("client:")
 		req, err := r.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
@@ -36,7 +37,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println(fmt.Sprintf("%s", string(resp)))
+		fmt.Println("server:", string(resp))
 	}
 
 }

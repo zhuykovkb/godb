@@ -63,7 +63,10 @@ func LoadConfig(configFile string) (*Config, error) {
 	config := defaultConfig
 	confData, err := os.ReadFile(configFile)
 	if err != nil {
-		InitLoggerFromConfig(config.Logging)
+		logerror := InitLoggerFromConfig(config.Logging)
+		if logerror != nil {
+			return nil, err
+		}
 		return &config, nil
 	}
 
@@ -82,20 +85,23 @@ func LoadConfig(configFile string) (*Config, error) {
 		return nil, fmt.Errorf("error parsing config: %w", err)
 	}
 
-	InitLoggerFromConfig(config.Logging)
+	logerror := InitLoggerFromConfig(config.Logging)
+	if logerror != nil {
+		return nil, err
+	}
 	return &config, nil
 }
 
-func InitLoggerFromConfig(cfg *LoggingConfig) {
+func InitLoggerFromConfig(cfg *LoggingConfig) error {
 	var outputs []logger.OutputTarget
 
 	outputs = append(outputs, logger.OutputTarget{Writer: os.Stdout})
 
 	logFile, err := os.OpenFile(cfg.Output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Printf("Error open log file %s: %v\n", cfg.Output, err)
-		os.Exit(1)
+		return errors.New(fmt.Sprintf("Error open log file %s: %v\n", cfg.Output, err))
 	}
+
 	outputs = append(outputs, logger.OutputTarget{Writer: logFile})
 
 	logCfg := logger.Config{

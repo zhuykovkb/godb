@@ -3,7 +3,7 @@ package inMemory
 import "sync"
 
 type Engine struct {
-	m    sync.Mutex
+	m    sync.RWMutex
 	data map[string]string
 }
 

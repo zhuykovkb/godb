@@ -6,7 +6,7 @@ import (
 	"net"
 )
 
-const TcpNetwork = "tcp"
+const TcpProto = "tcp"
 
 type Connection struct {
 	c             net.Conn
@@ -52,7 +52,7 @@ func (c *Connection) Send(b []byte) ([]byte, error) {
 }
 
 func NewTcpConnection(address string, maxBufferSize uint) (*Connection, error) {
-	c, err := newConnection(TcpNetwork, address, maxBufferSize)
+	c, err := newConnection(TcpProto, address, maxBufferSize)
 	if err != nil {
 		return &Connection{}, err
 	}

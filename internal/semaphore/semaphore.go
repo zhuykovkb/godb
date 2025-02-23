@@ -1,37 +1,23 @@
 package semaphore
 
-import (
-	"runtime"
-	"sync/atomic"
-)
-
 type Semaphore struct {
-	limit uint32
-	a     atomic.Uint32
+	limit chan struct{}
 }
 
-func NewSemaphore(limit uint32) *Semaphore {
-	return &Semaphore{
-		limit: limit,
-	}
+func NewSemaphore(limit uint32) Semaphore {
+	return Semaphore{make(chan struct{}, limit)}
 }
 
 func (s *Semaphore) Acquire() {
-	for {
-		c := s.a.Load()
-		if c < s.limit && s.a.CompareAndSwap(c, c+1) {
-			return
-		}
-		runtime.Gosched()
+	if s == nil || s.limit == nil {
+		return
 	}
+	s.limit <- struct{}{}
 }
 
 func (s *Semaphore) Release() {
-	for {
-		c := s.a.Load()
-		if c == 0 || s.a.CompareAndSwap(c, c-1) {
-			return
-		}
-		runtime.Gosched()
+	if s == nil || s.limit == nil {
+		return
 	}
+	<-s.limit
 }

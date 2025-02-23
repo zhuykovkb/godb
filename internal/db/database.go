@@ -14,7 +14,7 @@ type Db struct {
 	compute compute.ParserInterface
 }
 
-func GetDb(s storage.Storage, c compute.ParserInterface) *Db {
+func NewDb(s storage.Storage, c compute.ParserInterface) *Db {
 	return &Db{
 		storage: s,
 		compute: c,

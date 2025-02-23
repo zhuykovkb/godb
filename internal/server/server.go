@@ -17,6 +17,7 @@ const ConnType = "tcp"
 
 type Server struct {
 	Listener net.Listener
+	Sem      semaphore.Semaphore
 	Db       *db.Db
 	Config   *config.Config
 }
@@ -26,25 +27,25 @@ func (s *Server) Run() {
 	defer logger.Info("server stopped")
 
 	maxConn := uint32(s.Config.Network.MaxConnections)
-
-	sem := semaphore.NewSemaphore(maxConn)
+	if maxConn > 0 {
+		s.Sem = semaphore.NewSemaphore(maxConn)
+	}
 	logger.Info(fmt.Sprintf("max connections: %d", maxConn))
 
 	for {
-		sem.Acquire()
-
 		conn, err := s.Listener.Accept()
 		if err != nil {
 			logger.Info("failed to accept connection")
 			continue
 		}
 
+		s.Sem.Acquire()
 		go func(conn net.Conn) {
 			defer func() {
 				if err := recover(); err != nil {
 					logger.Warn(fmt.Sprintf("recovered from panic err: %s", string(err.([]byte))))
 				}
-				sem.Release()
+				s.Sem.Release()
 			}()
 			s.handle(conn)
 		}(conn)
@@ -65,7 +66,6 @@ func (s *Server) handle(conn net.Conn) {
 	buf := make([]byte, maxMessageSize)
 
 	for {
-
 		if idleTimeout.Seconds() > 0 {
 			if err := conn.SetDeadline(time.Now().Add(idleTimeout)); err != nil {
 				logger.Fatal(fmt.Sprintf("failed to set connection deadline: %s", err))
@@ -103,12 +103,12 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, errors.New("config is required")
 	}
 
-	database := db.GetDb(inmemory.NewEngine(), compute.NewParser())
-
 	l, err := net.Listen(ConnType, cfg.Network.Address)
 	if err != nil {
 		return nil, err
 	}
+
+	database := db.NewDb(inmemory.NewEngine(), compute.NewParser())
 
 	return &Server{
 		Listener: l,
